@@ -1,6 +1,8 @@
 from llm import get_llm
+from conversation_manager import ConversationManager
 
 llm = get_llm()
+convo = ConversationManager()
 
 def input_loop():
     while True:
@@ -8,12 +10,17 @@ def input_loop():
         if user_input.lower() == 'exit':
             print("Exiting the loop.")
             break
-        response = stream_collect(user_input)
+        # TODO: handle other inputs
+        else:
+            convo.addMessage("user", user_input)
+            response = stream_collect()
+            convo.addMessage("assistant", response)
+            
         # TODO: save to convo history, session data
         
-def stream_collect(user_input):
+def stream_collect():
     full_response = []
-    for chunk in llm.generate_response(user_input):
+    for chunk in llm.generate_response(convo.getHistory()):
         print(chunk, end="", flush=True)
         full_response.append(chunk)
     print()

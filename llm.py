@@ -35,10 +35,10 @@ class AnthropicLLM(BaseLLM):
         api_key=config.ANTRHROPIC_KEY,
     )
 
-    def generate_response(self, prompt: str):
+    def generate_response(self, conversation):
         with self.client.messages.stream(
             max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
+            messages=conversation,
             model=config.ANTHROPIC_MODEL,
         ) as stream:
             for text in stream.text_stream:

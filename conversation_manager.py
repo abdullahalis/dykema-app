@@ -1,11 +1,11 @@
 class ConversationManager():
     def __init__(self):
-        pass
         self.history = []
     
-    def addMessage(self, role, message):
+    def add_message(self, user, role, message):
         entry = {"role": role, "content": message}
+        
         self.history.append(entry)
     
-    def getHistory(self):
+    def get_history(self, user):
         return self.history

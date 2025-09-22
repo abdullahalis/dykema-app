@@ -1,10 +1,13 @@
 from llm import get_llm
 from conversation_manager import ConversationManager
-from auth import AuthManager
+from auth import SupabaseAuthManager
+from storage import SupabaseStorageManager
 
 llm = get_llm()
-convo = ConversationManager()
-auth = AuthManager()
+
+auth = SupabaseAuthManager()
+storage = SupabaseStorageManager()
+convo = ConversationManager(auth, storage)
 
 def input_loop():
     check_user()
@@ -13,7 +16,6 @@ def input_loop():
         check_user()
         user_input = input("> ")
         handle_input(user_input)
-            
         # TODO: save to convo history, session data
 
 def handle_input(user_input):
@@ -44,14 +46,15 @@ def get_llm_response(user_input):
 
 def stream_collect():
     full_response = []
-    for chunk in llm.generate_response(convo.get_history()):
+    messages = convo.get_current_convo()
+    for chunk in llm.generate_response(messages):
         print(chunk, end="", flush=True)
         full_response.append(chunk)
     print()
     return "".join(full_response) 
 
 def check_user():
-    while auth.get_user() is None:
+    while auth.get_user_id() is None:
 
         print("Please log in or sign up")
         print("1. Sign In")
@@ -83,7 +86,5 @@ def check_user():
         
         else:
             print("invalid input")
-            
-
 
 input_loop()

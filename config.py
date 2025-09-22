@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 import os
+from supabase import create_client
+
 load_dotenv()
 
 LLM_PROVIDER = "anthropic"  # Options: "openai", "anthropic", "mistral"
@@ -12,3 +14,5 @@ ANTHROPIC_MODEL = "claude-opus-4-1-20250805"
 
 SUPABASE_URL = os.getenv("SUPABASE_PROJECT_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)

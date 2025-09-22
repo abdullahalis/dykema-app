@@ -2,6 +2,7 @@ from llm import get_llm
 from conversation_manager import ConversationManager
 from auth import SupabaseAuthManager
 from storage import SupabaseStorageManager
+from error_types import AuthError
 
 llm = get_llm()
 
@@ -26,6 +27,25 @@ def handle_input(user_input):
             print("Signed out")
         else:
             print("sign out failed")
+    elif user_input == "/quit":
+        print("Goodbye!")
+        exit(0)
+    elif user_input == "/list":
+        convo.list_conversations()
+    elif user_input == "/switch":
+        title = input("Enter conversation title to switch to: ")
+        convo.switch_conversation(title)
+    elif user_input == "/show":
+        convo.print_convo()
+    elif user_input == "/new":
+        convo.create_new_conversation()
+    elif user_input == "/delete":
+        convo.list_conversations()
+        title = input("Enter conversation title to delete: ")
+        convo.delete_conversation(title)
+    elif user_input == "/rename":
+        new_title = input("Enter new title for the current conversation: ")
+        convo.rename_conversation(new_title)
     else:
         get_llm_response(user_input)
 
@@ -54,6 +74,8 @@ def stream_collect():
     return "".join(full_response) 
 
 def check_user():
+    
+    auth.sign_in("abdullahalisye@gmail.com", "password") # TODO: remove 
     while auth.get_user_id() is None:
 
         print("Please log in or sign up")
@@ -66,10 +88,11 @@ def check_user():
             email = input("Email: ")
             password = input("Password: ")
 
-            if auth.sign_in(email, password):
+            try:
+                auth.sign_in(email, password)
                 print("Succesfuly signed in as", email)
-            else:
-                print("Sign in failed")
+            except AuthError as e:
+                print(f"Authentication Error: {e}")
         
         elif choice == "2":
             email = input("Email: ")
@@ -77,14 +100,15 @@ def check_user():
             confirm_pass = input("Confirm password: ")
 
             if password == confirm_pass:
-                if auth.sign_up(email, password):
+                try:
+                    auth.sign_up(email, password)
                     print("Successfully created account for", email)
-                else:
-                    print("Sign up failed")
+                except AuthError as e:
+                    print(f"Authentication Error: {e}")
             else:
-                print("Passwords do not match")
+                print("Passwords do not match. Please try again.")
         
         else:
-            print("invalid input")
+            print("Invalid input. Please enter 1 or 2.")
 
 input_loop()

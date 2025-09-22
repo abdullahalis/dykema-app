@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
-import config
+import config, logging
+from error_types import StorageError
 
 
 class StorageManager(ABC):
@@ -28,52 +29,51 @@ class SupabaseStorageManager(StorageManager):
         self.table_name = 'conversations'
 
     def save_conversation(self, user_id, conversation_id, messages):
-        """Save conversation to Supabase"""
         try:
-            if conversation_id is not None:
+            if conversation_id:
                 # Update existing conversation
-                print("updating convo")
                 response = (self.supabase
-                           .table(self.table_name)
-                           .update({"messages": messages})
-                           .eq('id', conversation_id)
-                           .eq('user_id', user_id)
-                           .execute())
-                return response
+                        .table(self.table_name)
+                        .update({"messages": messages})
+                        .eq('id', conversation_id)
+                        .eq('user_id', user_id)
+                        .execute())
             else:
-                print("inserting new convo")
-                print("user from convo manager", user_id)
-                print("user from supabase", self.supabase.auth.get_user().user.id)
                 # Insert new conversation
                 new_convo = {"user_id": user_id, "messages": messages}
                 response = (self.supabase
-                           .table(self.table_name)
-                           .insert(new_convo)
-                           .execute())
-                return response
+                        .table(self.table_name)
+                        .insert(new_convo)
+                        .execute())
+            if not response.data:
+                raise StorageError("No data returned from save operation.")
+            return response.data[0]['id'] # return conversation id
         except Exception as e:
-            print(f"Save error: {e}")
-            return None
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to save conversation.") from e
+
         
 
-    def get_messages(self, user_id: str, conversation_id: str) -> Optional[Dict[str, Any]]:
-        """Load specific conversation from Supabase"""
+    def get_messages(self, user_id: str, conversation_id: str) -> list:
         if conversation_id is None:
-            return []  # Return empty messages if no conversation selected
+            return [] # Return empty list for new conversation
         try:
             response = (self.supabase
-                       .table(self.table_name)
-                       .select('messages')
-                       .eq('id', conversation_id)
-                       .eq('user_id', user_id)
-                       .single()
-                       .execute())
+                    .table(self.table_name)
+                    .select('messages')
+                    .eq('id', conversation_id)
+                    .eq('user_id', user_id)
+                    .single()
+                    .execute())
+            if not response.data:
+                raise StorageError("Conversation not found.")
             return response.data['messages']
         except Exception as e:
-            print(f"Error getting messages: {e}")
-            return None
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to get messages.")
+
     
-    def list_conversations(self, user_id):
+    def get_conversations(self, user_id):
         try:
             response = (self.supabase
                        .table(self.table_name)
@@ -81,10 +81,10 @@ class SupabaseStorageManager(StorageManager):
                        .eq('user_id', user_id)
                        .order('created_at', desc=True)
                        .execute())
-            return response
+            return response.data
         except Exception as e:
-            print(f"List error: {e}")
-            return None
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to fetch conversations.")
         
     def get_conversation_id(self, user_id, title):
         try:
@@ -95,12 +95,10 @@ class SupabaseStorageManager(StorageManager):
                        .eq('title', title)
                        .single()
                        .execute())
-            if response.data:
-                return response.data['id']
-            return None
+            return response.data['id']
         except Exception as e:
-            print(f"Get ID error: {e}")
-            return None
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to fetch conversation with that title.")
     
     def delete_conversation(self, user_id, conversation_id):
         try:
@@ -110,10 +108,11 @@ class SupabaseStorageManager(StorageManager):
                        .eq('id', conversation_id)
                        .eq('user_id', user_id)
                        .execute())
-            return True if response.data else False
+            if not response.data:
+                raise StorageError("Failed to delete conversation")
         except Exception as e:
-            print(f"Delete error: {e}")
-            return False
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to delete conversation.")
     
     def rename_conversation(self, user_id, conversation_id, new_title):
         try:
@@ -123,7 +122,8 @@ class SupabaseStorageManager(StorageManager):
                        .eq('id', conversation_id)
                        .eq('user_id', user_id)
                        .execute())
-            return True if response.data else False
+            if not response.data:
+                raise StorageError("Failed to rename conversation.")
         except Exception as e:
-            print(f"Rename error: {e}")
-            return False
+            logging.error(f"Supabase storage error: {e}", exc_info=True)
+            raise StorageError(f"Failed to rename conversation.")

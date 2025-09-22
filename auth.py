@@ -1,7 +1,7 @@
 import config
+import logging
 from error_types import AuthError
 from abc import ABC, abstractmethod
-from supabase import create_client, Client
 
 class AuthManager(ABC):
     @abstractmethod
@@ -29,8 +29,9 @@ class SupabaseAuthManager(AuthManager):
             response = self.supabase.auth.get_user()
             return response.user.id
         except Exception as e:
-            raise AuthError("Could not retrieve user ID.") from e
-        
+            logging.error(f"Auth error: {e}", exc_info=True)
+            raise AuthError("Could not retrieve user ID.")
+            
     def sign_up(self, email, password):
         try:
             response = self.supabase.auth.sign_up(
@@ -42,7 +43,8 @@ class SupabaseAuthManager(AuthManager):
             if not response.user:
                 raise AuthError("Sign up failed: no user returned.")
         except Exception as e:
-            raise AuthError(f"Sign up failed: {e}") from e
+            logging.error(f"Auth error: {e}", exc_info=True)
+            raise AuthError(f"Sign up failed. Please try again.")
     
     def sign_in(self, email, password):
         try:
@@ -55,13 +57,15 @@ class SupabaseAuthManager(AuthManager):
             if not response.user:
                 raise AuthError("Sign in failed: no user returned.")
         except Exception as e:
-            raise AuthError(f"Sign in failed: {e}") from e
+            logging.error(f"Auth error: {e}", exc_info=True)
+            raise AuthError(f"Sign in failed. Please try again")
 
     def sign_out(self):
         try:
             self.supabase.auth.sign_out()
         except Exception as e:
-            raise AuthError(f"Sign out failed: {e}") from e
+            logging.error(f"Auth error: {e}", exc_info=True)
+            raise AuthError(f"Sign out failed. Please try again.")
         
     def test_rls_policy(self):
         """Test if RLS policy allows select, insert, update, and delete"""

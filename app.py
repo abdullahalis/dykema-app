@@ -32,8 +32,9 @@ def handle_input(user_input):
         exit(0)
     elif user_input == "/list":
         convo.list_conversations()
-    elif user_input == "/switch":
-        title = input("Enter conversation title to switch to: ")
+    elif user_input == "/select":
+        convo.list_conversations()
+        title = input("Enter conversation title to select: ")
         convo.switch_conversation(title)
     elif user_input == "/show":
         convo.print_convo()
@@ -46,17 +47,20 @@ def handle_input(user_input):
     elif user_input == "/rename":
         new_title = input("Enter new title for the current conversation: ")
         convo.rename_conversation(new_title)
-    else:
+    else: # if not a command, send to llm
         get_llm_response(user_input)
 
 def print_options():
     print(
         """
         /logout to sign out
+        /quit to quit application
         /new to start a new conversation
         /list to show all conversations
-        /switch to switch conversation
-        /quit to quit application
+        /select to select a conversation
+        /show to show current conversation
+        /delete to delete a conversation
+        /rename to rename current conversation
         """)
 
 def get_llm_response(user_input):
@@ -66,7 +70,7 @@ def get_llm_response(user_input):
 
 def stream_collect():
     full_response = []
-    messages = convo.get_current_convo()
+    messages = convo.get_current_messages()
     for chunk in llm.generate_response(messages):
         print(chunk, end="", flush=True)
         full_response.append(chunk)

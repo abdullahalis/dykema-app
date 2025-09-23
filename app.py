@@ -1,14 +1,16 @@
-from llm import get_llm
+from llm import get_llm, LLMManager
 from conversation_manager import ConversationManager
 from auth import SupabaseAuthManager
-from storage import SupabaseStorageManager
+from storage.backend.supabase_backend import SupabaseBackend
+from storage.cache.redis_cache import RedisCacheManager
+from storage.combined_storage import CombinedStorageManager
 from error_types import AuthError
 
-llm = get_llm()
-
 auth = SupabaseAuthManager()
-storage = SupabaseStorageManager()
-convo = ConversationManager(auth, storage)
+storage_manager = CombinedStorageManager(SupabaseBackend(), RedisCacheManager())
+convo = ConversationManager(auth, storage_manager)
+llm = get_llm()
+llm_manager = LLMManager(llm, convo)
 
 def input_loop():
     check_user()
@@ -48,7 +50,7 @@ def handle_input(user_input):
         new_title = input("Enter new title for the current conversation: ")
         convo.rename_conversation(new_title)
     else: # if not a command, send to llm
-        get_llm_response(user_input)
+        llm_manager.handle_input(user_input)
 
 def print_options():
     print(
@@ -63,19 +65,20 @@ def print_options():
         /rename to rename current conversation
         """)
 
-def get_llm_response(user_input):
-    convo.add_message("user", user_input)
-    response = stream_collect()
-    convo.add_message("assistant", response)  
+# def get_llm_response(user_input):
+#     messages = convo.get_current_messages()
+#     messages.append({"role": "user", "content": user_input})
+#     response = stream_collect(messages)
+#     messages.append({"role": "assistant", "content": response})
+#     convo.update_messages(messages)  
 
-def stream_collect():
-    full_response = []
-    messages = convo.get_current_messages()
-    for chunk in llm.generate_response(messages):
-        print(chunk, end="", flush=True)
-        full_response.append(chunk)
-    print()
-    return "".join(full_response) 
+# def stream_collect(messages):
+#     full_response = []
+#     for chunk in llm.generate_response(messages):
+#         print(chunk, end="", flush=True)
+#         full_response.append(chunk)
+#     print()
+#     return "".join(full_response) 
 
 def check_user():
     

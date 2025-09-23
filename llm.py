@@ -2,10 +2,29 @@ import config
 from openai import OpenAI
 import anthropic
 
+class LLMManager:
+    def __init__(self, llm, conversation_manager):
+        self.llm = llm
+        self.convo_manager = conversation_manager
+
+    def handle_input(self, user_input):
+        messages = self.convo_manager.get_current_messages()
+        messages.append({"role": "user", "content": user_input})
+        response = self.print_stream(messages)
+        messages.append({"role": "assistant", "content": response})
+        self.convo_manager.update_messages(messages)  
+
+    def print_stream(self, messages):
+        full_response = []
+        for chunk in self.llm.generate_response(messages):
+            print(chunk, end="", flush=True)
+            full_response.append(chunk)
+        print()
+        return "".join(full_response) 
+    
 class BaseLLM:
     def generate_response(self, prompt: str) -> str:
         raise NotImplementedError
-
 
 class OpenAILLM(BaseLLM):
     def __init__(self):

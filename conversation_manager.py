@@ -16,14 +16,10 @@ class ConversationManager():
             print(f"Authentication Error: {e}")
         
 
-    def add_message(self, role, message):
+    def update_messages(self, messages):
         try:
             user_id = self.auth.get_user_id()
-            new_message = {"role": role, "content": message}
-
-            curr_messages = self.storage.get_messages(user_id, self.curr_convo_id)
-            curr_messages.append(new_message)
-            convo_id = self.storage.save_conversation(user_id, self.curr_convo_id, curr_messages)
+            convo_id = self.storage.save_conversation(user_id, self.curr_convo_id, messages)
             
             if not self.curr_convo_id:
                 self.curr_convo_id = convo_id

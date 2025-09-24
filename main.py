@@ -1,7 +1,7 @@
-from app import App
+from app.command_line_app import CommandLineApp
 
 def main():
-    app = App()
+    app = CommandLineApp()
     app.run()
 
 

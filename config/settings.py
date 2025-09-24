@@ -23,3 +23,5 @@ SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
 # Redis credentials
 REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL")
 REDIS_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+
+USE_DOCUMENTS = False

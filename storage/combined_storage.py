@@ -1,8 +1,9 @@
 from storage.base_storage import StorageManager
+from storage.cache.base_cache import CacheManager
 from typing import List, Dict, Any
 
 class CombinedStorageManager(StorageManager):
-    def __init__(self, backend, cache):
+    def __init__(self, backend: StorageManager, cache: CacheManager):
         self.backend = backend
         self.cache = cache
     

@@ -2,7 +2,7 @@ from storage.base_storage import StorageManager
 from typing import List, Dict, Any
 import logging
 from config.services import supabase
-from error_types import StorageError
+from error.error_types import StorageError
 
 class SupabaseBackend(StorageManager):
     def __init__(self):

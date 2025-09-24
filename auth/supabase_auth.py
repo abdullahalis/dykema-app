@@ -1,6 +1,6 @@
 from config.services import supabase
 import logging
-from error_types import AuthError
+from error.error_types import AuthError
 from auth.base_auth import AuthManager
 
 class SupabaseAuthManager(AuthManager):

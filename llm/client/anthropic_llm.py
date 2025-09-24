@@ -1,9 +1,9 @@
-from llm.base_llm import BaseLLM
+from llm.client.base_llm import BaseLLM
 from config.settings import ANTHROPIC_KEY, ANTHROPIC_MODEL
 import anthropic
 from typing import List, Dict, Iterator
 import logging
-from error_types import LLMError
+from error.error_types import LLMError
 
 class AnthropicLLM(BaseLLM):
     def __init__(self):
@@ -11,10 +11,11 @@ class AnthropicLLM(BaseLLM):
                         api_key=ANTHROPIC_KEY,
                     )
 
-    def generate_response(self, messages: List[Dict[str, str]]) -> Iterator[str]:
+    def generate_response(self, messages: List[Dict[str, str]], system_prompt: str) -> Iterator[str]:
         try:
             with self.client.messages.stream(
                 max_tokens=1024,
+                system=system_prompt,
                 messages=messages,
                 model=ANTHROPIC_MODEL,
             ) as stream:

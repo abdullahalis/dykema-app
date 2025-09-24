@@ -1,9 +1,9 @@
-from llm.base_llm import BaseLLM
+from llm.client.base_llm import BaseLLM
 from config.settings import OPENAI_KEY, OPENAI_MODEL
 from openai import OpenAI
 from typing import List, Dict, Iterator
 import logging
-from error_types import LLMError
+from error.error_types import LLMError
 
 class OpenAILLM(BaseLLM):
     def __init__(self):

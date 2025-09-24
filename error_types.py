@@ -3,3 +3,6 @@ class AuthError(Exception):
 
 class StorageError(Exception):
     pass
+
+class LLMError(Exception):
+    pass

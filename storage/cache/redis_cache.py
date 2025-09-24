@@ -1,7 +1,7 @@
 # cache/redis_cache.py
 import json
 from storage.cache.base_cache import CacheManager
-from config import redis
+from config.services import redis
 
 class RedisCacheManager(CacheManager):
     def __init__(self):

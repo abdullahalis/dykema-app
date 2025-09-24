@@ -1,11 +1,12 @@
 from storage.base_storage import StorageManager
 from typing import List, Dict, Any
-import config, logging
+import logging
+from config.services import supabase
 from error_types import StorageError
 
 class SupabaseBackend(StorageManager):
     def __init__(self):
-        self.supabase = config.supabase
+        self.supabase = supabase
         self.table_name = 'conversations'
 
     def get_messages(self, user_id: str, conversation_id: str) -> List[Dict[str, str]]:

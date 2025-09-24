@@ -28,3 +28,14 @@ logging.basicConfig(
     level=logging.ERROR,         # log only ERROR and above
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# Factory method to get appropriate LLM instance
+def get_llm() -> BaseLLM:
+    if config.LLM_PROVIDER == "openai":
+        return OpenAILLM()
+    elif config.LLM_PROVIDER == "anthropic":
+        return AnthropicLLM()
+    elif config.LLM_PROVIDER == "mistral":
+        return MistralLLM()
+    else:
+        raise ValueError(f"Unsupported LLM provider: {config.LLM_PROVIDER}")

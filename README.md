@@ -43,7 +43,8 @@ pip install -r requirements.txt
 ```
 python main.py
 ```
-7. Run tests:
+7. Optionally set USE_DOCUMENTS to True in config/settings.py to enable RAG responses using the Bondi v. Vanderstok case as reference.
+8. Run tests:
 ```
 python -m pytest -v -s
 ```

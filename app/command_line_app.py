@@ -1,5 +1,4 @@
 from llm.llm_manager import LLMManager
-
 from llm.factory import get_llm
 from config.services import setup_logging, vector_manager
 from orchestration.orchestration_manager import OrchestrationManager
@@ -9,74 +8,93 @@ from storage.combined_storage import CombinedStorageManager
 from error.error_types import AuthError
 from auth.supabase_auth import SupabaseAuthManager
 
+
 class CommandLineApp:
+    """CLI application for interacting with LLM and managing conversations."""
+
     def __init__(self):
+        """Initialize services, storage, LLM, and orchestration manager."""
         setup_logging()
         self.auth_manager = SupabaseAuthManager()
         storage_manager = CombinedStorageManager(SupabaseBackend(), RedisCacheManager())
         llm_manager = LLMManager(llm=get_llm(), retriever=vector_manager)
-        self.orchestration_manager = OrchestrationManager(self.auth_manager, storage_manager, llm_manager)
+        self.orchestrator = OrchestrationManager(self.auth_manager, storage_manager, llm_manager)
 
-    def run(self):
-        self.input_loop()
+    def run(self) -> None:
+        """Start the application input loop."""
+        self._run_loop()
 
-    def input_loop(self):
-        self.check_user()
-        print("Hi! Start a conversation or type /help for more options.")
+    def _run_loop(self) -> None:
+        """Main input loop: reads user input and processes commands or prompts."""
+        print("Welcome to the Dykema CLI App!")
+        self._ensure_signed_in()
+        print("Start a conversation or type /help for more options.")
 
         while True:
-            self.check_user()
+            self._ensure_signed_in()
             user_input = input("> ")
-            self.handle_input(user_input)
+            self._process_input(user_input)
 
-    def handle_input(self, user_input: str):
+    def _process_input(self, user_input: str) -> None:
+        """Route user input to either command handling or LLM processing.
+
+        Args:
+            user_input (str): The input entered by the user.
+        """
         if user_input.startswith("/"):
-                
-            if user_input == "/help":
-                self.print_options()
-            elif user_input == "/logout":
-                if self.auth.sign_out():
-                    print("Signed out.")
-                else:
-                    print("Sign out failed.")
-            elif user_input == "/quit":
-                print("Goodbye!")
-                exit(0)
-            elif user_input == "/list":
-                self.orchestration_manager.list_conversations()
-            elif user_input == "/select": #TODO: allow user to cancel
-                self.orchestration_manager.list_conversations()
-                title = input("Enter conversation title to select (or /cancel to cancel): ")
-                if title != "/cancel":
-                    self.orchestration_manager.switch_conversation(title)
-                else:
-                    print("Selection cancelled.")
-            elif user_input == "/show":
-                self.orchestration_manager.print_conversation()
-            elif user_input == "/new":
-                self.orchestration_manager.create_new_conversation()
-            elif user_input == "/delete":
-                self.orchestration_manager.list_conversations()
-                title = input("Enter conversation title to delete (or /cancel to cancel): ")
-                if title != "/cancel":
-                    self.orchestration_manager.delete_conversation(title)
-                else:
-                    print("Deletion cancelled.")
-                self.orchestration_manager.delete_conversation(title)
-            elif user_input == "/rename":
-                new_title = input("Enter new title for the current conversation (or /cancel to cancel): ")
-                self.orchestration_manager.rename_conversation(new_title)
-                if new_title != "/cancel":
-                    self.orchestration_manager.rename_conversation(new_title)
-                else:
-                    print("Renaming cancelled.")
-            else: # unknown command
-                print("Unknown command. Type /help for options.")
-        else:  # normal user input → LLM
-            self.orchestration_manager.handle_prompt(user_input)
+            self._process_command(user_input)
+        else:
+            # Normal user input → LLM
+            self.orchestrator.handle_prompt(user_input)
 
-    def check_user(self):
-        self.auth_manager.sign_in("abdullahalisye@gmail.com", "password")  # TODO: remove
+    def _process_command(self, command: str) -> None:
+        """Process CLI commands starting with '/'.
+
+        Args:
+            command (str): The command input by the user.
+        """
+        if command == "/help":
+            self._print_options()
+        elif command == "/logout":
+            if self.auth_manager.sign_out():
+                print("Signed out.")
+            else:
+                print("Sign out failed.")
+        elif command == "/quit":
+            print("Goodbye!")
+            exit(0)
+        elif command == "/list":
+            self.orchestrator.list_conversations()
+        elif command == "/select":
+            self.orchestrator.list_conversations()
+            title = input("Enter conversation title to select (or /cancel to cancel): ")
+            if title != "/cancel":
+                self.orchestrator.switch_conversation(title)
+            else:
+                print("Selection cancelled.")
+        elif command == "/show":
+            self.orchestrator.print_conversation()
+        elif command == "/new":
+            self.orchestrator.create_new_conversation()
+        elif command == "/delete":
+            self.orchestrator.list_conversations()
+            title = input("Enter conversation title to delete (or /cancel to cancel): ")
+            if title != "/cancel":
+                self.orchestrator.delete_conversation(title)
+            else:
+                print("Deletion cancelled.")
+        elif command == "/rename":
+            new_title = input("Enter new title for the current conversation (or /cancel to cancel): ")
+            if new_title != "/cancel":
+                self.orchestrator.rename_conversation(new_title)
+            else:
+                print("Renaming cancelled.")
+        else:
+            print("Unknown command. Type /help for options.")
+
+    def _ensure_signed_in(self) -> None:
+        """Ensure the user is signed in before allowing any operations."""
+        # self.auth_manager.sign_in("abdullahalisye@gmail.com", "password")  # TODO: remove
         while self.auth_manager.get_user_id() is None:
             print("Please log in or sign up")
             print("1. Sign In")
@@ -87,18 +105,15 @@ class CommandLineApp:
             if choice == "1":
                 email = input("Email: ")
                 password = input("Password: ")
-
                 try:
                     self.auth_manager.sign_in(email, password)
                     print("Successfully signed in as", email)
                 except AuthError as e:
                     print(f"Authentication Error: {e}")
-
             elif choice == "2":
                 email = input("Email: ")
                 password = input("Password: ")
                 confirm_pass = input("Confirm password: ")
-
                 if password == confirm_pass:
                     try:
                         self.auth_manager.sign_up(email, password)
@@ -110,9 +125,13 @@ class CommandLineApp:
             else:
                 print("Invalid input. Please enter 1 or 2.")
 
-    def print_options(self):
+    def _print_options(self) -> None:
+        """Print all available commands for the user."""
         print(
             """
+            Type your message and hit Enter to send it to the LLM or type a command.
+
+            Available commands:
             /logout to sign out
             /quit to quit application
             /new to start a new conversation
@@ -121,5 +140,6 @@ class CommandLineApp:
             /show to show current conversation
             /delete to delete a conversation
             /rename to rename current conversation
+            /help to show this help message
             """
         )

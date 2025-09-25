@@ -3,6 +3,7 @@ from pypdf import PdfReader
 from typing import List, Dict
 
 def load_pdfs_from_folder(folder_path: str) -> List[Dict[str, str]]:
+    """Load all PDF files from a specified folder and extract their text content."""
     docs = []
     for file in os.listdir(folder_path):
         if file.endswith(".pdf"):

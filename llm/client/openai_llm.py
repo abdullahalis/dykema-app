@@ -6,14 +6,17 @@ import logging
 from error.error_types import LLMError
 
 class OpenAILLM(BaseLLM):
+    """OpenAI LLM client implementation."""
     def __init__(self):
         self.client = OpenAI(api_key=OPENAI_KEY)
         
-    def generate_response(self, messages: List[Dict[str, str]]) -> Iterator[str]:
+    def generate_response(self, messages: List[Dict[str, str]], system_prompt: str) -> Iterator[str]:
+        """Stream response generation from OpenAI LLM."""
         try:    
             stream = self.client.responses.create(
                 model=OPENAI_MODEL,
                 input=messages,
+                instructions=system_prompt,
                 stream=True
             )
             for event in stream:

@@ -13,9 +13,6 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_MODEL = "claude-opus-4-1-20250805"
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-MISTRAL_MODEL = "mistral-large-latest"
-MISTRAL_KEY = os.getenv("MISTRAL_API_KEY")
-
 # Supabase credentials
 SUPABASE_URL = os.getenv("SUPABASE_PROJECT_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
@@ -24,4 +21,5 @@ SUPABASE_KEY = os.getenv("SUPABASE_API_KEY")
 REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL")
 REDIS_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN")
 
+# Flag to enable/disable document-based RAG
 USE_DOCUMENTS = False

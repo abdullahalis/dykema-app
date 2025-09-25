@@ -5,11 +5,13 @@ from config.services import supabase
 from error.error_types import StorageError
 
 class SupabaseBackend(StorageManager):
+    """Supabase Postgres database implementation of StorageManager."""
     def __init__(self):
         self.supabase = supabase
         self.table_name = 'conversations'
 
     def get_messages(self, user_id: str, conversation_id: str) -> List[Dict[str, str]]:
+        """Retrieve messages for a given user and conversation ID."""
         if conversation_id is None:
             return [] # Return empty list for new conversation
         try:
@@ -29,6 +31,7 @@ class SupabaseBackend(StorageManager):
 
     
     def get_conversations(self, user_id: str) -> List[Dict[str, Any]]:
+        """Retrieve a list of conversations for a given user."""
         try:
             response = (self.supabase
                        .table(self.table_name)
@@ -43,6 +46,7 @@ class SupabaseBackend(StorageManager):
         
 
     def get_conversation_id(self, user_id: str, title: str) -> str:
+        """Retrieve a conversation ID by title for a given user."""
         try:
             response = (self.supabase
                        .table(self.table_name)
@@ -58,6 +62,7 @@ class SupabaseBackend(StorageManager):
         
 
     def save_conversation(self, user_id: str, conversation_id: str, messages: List[Dict[str, str]]) -> str:
+        """Save messages for a given user and conversation ID. Returns the conversation ID."""
         try:
             if conversation_id:
                 # Update existing conversation
@@ -83,6 +88,7 @@ class SupabaseBackend(StorageManager):
         
 
     def delete_conversation(self, user_id: str, conversation_id: str) -> None:
+        """Delete a conversation for a given user and conversation ID."""
         try:
             response = (self.supabase
                        .table(self.table_name)
@@ -98,6 +104,7 @@ class SupabaseBackend(StorageManager):
     
 
     def rename_conversation(self, user_id: str, conversation_id: str, new_title: str) -> None:
+        """Rename a conversation for a given user and conversation ID."""
         try:
             response = (self.supabase
                        .table(self.table_name)

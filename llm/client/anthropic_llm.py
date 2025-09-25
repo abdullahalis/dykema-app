@@ -6,12 +6,14 @@ import logging
 from error.error_types import LLMError
 
 class AnthropicLLM(BaseLLM):
+    """Anthropic LLM client implementation."""
     def __init__(self):
         self.client =  anthropic.Anthropic(
                         api_key=ANTHROPIC_KEY,
                     )
 
     def generate_response(self, messages: List[Dict[str, str]], system_prompt: str) -> Iterator[str]:
+        """Stream response generation from Anthropic LLM."""
         try:
             with self.client.messages.stream(
                 max_tokens=1024,
